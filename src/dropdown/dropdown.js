@@ -33,9 +33,18 @@ angular.module('ui.bootstrap.dropdown', [])
     // unbound this event handler. So check openScope before proceeding.
     if (!openScope) { return; }
 
-    var toggleElement = openScope.getToggleElement();
-    if ( evt && toggleElement && toggleElement[0].contains(evt.target) ) {
-        return;
+    var toggleElements = openScope.getToggleElements();
+    var skip = false;
+    if(evt && toggleElements) {
+      angular.forEach(toggleElements, function(toggleElement) {
+        if (toggleElement[0].contains(evt.target) ) {
+            skip = true;
+        }
+      });
+    }
+
+    if(skip) {
+      return;
     }
 
     openScope.$apply(function() {
@@ -57,7 +66,8 @@ angular.module('ui.bootstrap.dropdown', [])
       openClass = dropdownConfig.openClass,
       getIsOpen,
       setIsOpen = angular.noop,
-      toggleInvoker = $attrs.onToggle ? $parse($attrs.onToggle) : angular.noop;
+      toggleInvoker = $attrs.onToggle ? $parse($attrs.onToggle) : angular.noop,
+      toggleElements = [];
 
   this.init = function( element ) {
     self.$element = element;
@@ -81,13 +91,17 @@ angular.module('ui.bootstrap.dropdown', [])
     return scope.isOpen;
   };
 
-  scope.getToggleElement = function() {
-    return self.toggleElement;
+  this.addToggleElement = function(element) {
+    toggleElements.push(element);
+  };
+
+  scope.getToggleElements = function() {
+    return toggleElements;
   };
 
   scope.focusToggleElement = function() {
-    if ( self.toggleElement ) {
-      self.toggleElement[0].focus();
+    if (toggleElements && toggleElements.length > 0) {
+      toggleElements[0][0].focus();
     }
   };
 
@@ -133,7 +147,7 @@ angular.module('ui.bootstrap.dropdown', [])
         return;
       }
 
-      dropdownCtrl.toggleElement = element;
+      dropdownCtrl.addToggleElement(element);
 
       var toggleDropdown = function(event) {
         event.preventDefault();
